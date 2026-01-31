@@ -89,6 +89,18 @@ topics on:
     2.  Run `npm run build` to compile the project.
     3.  Verify that the build completed successfully with `npm run start`.
 
+- **Error: `@lydell/node-pty` "could not find the binary package" (e.g.
+  `@lydell/node-pty-win32-x64/conpty.node`) when running shell commands on
+  Windows.**
+  - **Cause:** The PTY native binary for your platform was not installed. This
+    often happens if you use `npm install --omit=optional` (or `--no-optional`),
+    which skips optional dependencies. The interactive shell feature relies on
+    optional platform-specific packages.
+  - **Solution:** Reinstall without omitting optional dependencies: run
+    `npm install` (without `--omit=optional` or `--no-optional`). If you cannot
+    install optional dependencies, the shell tool will fall back to
+    `child_process` automatically; interactive PTY features may be limited.
+
 - **Error: "Operation not permitted", "Permission denied", or similar.**
   - **Cause:** When sandboxing is enabled, Gemini CLI may attempt operations
     that are restricted by your sandbox configuration, such as writing outside

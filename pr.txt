@@ -1,0 +1,29 @@
+    1 fix(core): fallback to child_process when PTY binary is missing
+    2
+    3 When `node-pty` cannot locate its native binary (e.g., due to
+    4 installation with `--omit=optional`), the shell execution service now
+    5 catches this specific error, logs a warning, and gracefully falls back
+    6 to using `child_process` instead of failing the execution.
+    7
+    8 - Update `executeWithPty` to re-throw missing binary errors.
+    9 - Update `execute` to catch these errors and emit a warning.
+   10 - Add troubleshooting guide for this specific error.
+
+  Pull Request Description
+
+  Title: Fix shell execution failure when optional PTY dependencies are missing
+
+  1. What is the original problem?
+  The interactive shell feature relies on @lydell/node-pty, which builds/downloads platform-specific binaries. If a user installs dependencies with npm install --omit=optional (or --no-optional), or if the binary is otherwise missing, node-pty throws an error ("could not find the
+  binary package"). Previously, the executeWithPty method caught this error and returned a generic failure result, preventing the ShellExecutionService from triggering its fallback mechanism to standard child_process. This resulted in command execution failures for users in
+  restricted environments.
+
+  2. How this fixes it:
+   - Modified executeWithPty to explicitly identify "missing binary" errors and re-throw them instead of swallowing them.
+   - Updated the main execute method to catch these specific errors, emit a user-facing warning ([GEMINI_CLI_WARNING] PTY unavailable...), and proceed to the existing child_process fallback logic.
+   - Added a test case in shellExecutionService.test.ts to verify the fallback behavior and warning emission when the PTY spawn fails with the specific error.
+   - Updated docs/troubleshooting.md to help users resolve the underlying installation issue if they want PTY support.
+
+  3. Why we need this fix:
+  This ensures the CLI remains functional for users who cannot or choose not to install optional dependencies (common in CI/CD pipelines or minimal environments). While they won't have the advanced PTY features (like handling interactive prompts), basic shell commands should
+  still work reliability without crashing.
